@@ -33,10 +33,7 @@ export function Pagination({
       <div className="flex flex-1 items-center justify-center space-x-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="flex items-center space-x-2 text-sm"
-            >
+            <Button className="flex items-center space-x-2 text-sm bg-transparent text-gray-800 dark:text-gray-200 border border-transparent hover:bg-transparent">
               Rows per page: {tasksPerPage}
             </Button>
           </DropdownMenuTrigger>
@@ -58,32 +55,32 @@ export function Pagination({
         <Button
           disabled={currentPage === 1}
           onClick={() => onPageChange(1)}
-          className="p-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs"
+          className="p-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs flex items-center justify-center"
         >
-          <ChevronRight className="h-4 w-4 rotate-180 mr-[-0.25rem]" />
-          <ChevronRight className="h-4 w-4 rotate-180" />
+          <ChevronRight className="h-3 w-3 rotate-180" />
+          <ChevronRight className="h-3 w-3 rotate-180 ml-[-0.25rem]" />
         </Button>
         <Button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="p-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs"
+          className="p-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs flex items-center justify-center"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-3 w-3" />
         </Button>
         <Button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="p-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs"
+          className="p-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs flex items-center justify-center"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-3 w-3" />
         </Button>
         <Button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(totalPages)}
-          className="p-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs"
+          className="p-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg text-xs flex items-center justify-center"
         >
-          <ChevronRight className="h-4 w-4" />
-          <ChevronRight className="h-4 w-4 ml-[-0.25rem]" />
+          <ChevronRight className="h-3 w-3" />
+          <ChevronRight className="h-3 w-3 ml-[-0.25rem]" />
         </Button>
       </div>
     </div>
