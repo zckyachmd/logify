@@ -32,7 +32,7 @@ type TaskTableProps = {
   tasks: Task[];
 };
 
-export function TaskTable({ tasks }: TaskTableProps) {
+export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
   const [sortKey, setSortKey] = useState<keyof Task | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);

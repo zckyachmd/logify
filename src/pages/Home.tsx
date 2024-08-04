@@ -1,6 +1,6 @@
 import { TaskTable } from "@/components/TaskTable";
 
-export function Home() {
+export function Home(): JSX.Element {
   const tasks = [
     {
       id: 1,
