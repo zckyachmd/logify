@@ -4,7 +4,13 @@ import {
   TableHeader as TableHeaderComponent,
 } from "@/components/ui/table";
 import { ChevronUp, ChevronDown } from "lucide-react";
-import { Task, TableHeaderProps } from "@/models/Task";
+import { Task } from "@/models/Task";
+
+type TableHeaderProps = {
+  sortKey: keyof Task | null;
+  sortDirection: "asc" | "desc";
+  onSort: (key: keyof Task) => void;
+};
 
 export function TableHeader({
   sortKey,

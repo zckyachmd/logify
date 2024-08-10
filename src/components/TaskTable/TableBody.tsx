@@ -6,7 +6,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
-import { TableBodyProps } from "@/models/Task";
+import { Task } from "@/models/Task";
+
+type TableBodyProps = {
+  tasks: Task[];
+};
 
 export function TableBody({ tasks }: TableBodyProps) {
   const handleView = (id: number) => {
