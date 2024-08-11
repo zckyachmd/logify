@@ -15,8 +15,8 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { AlertNotification } from "@/components/AlertNotification";
 import { saveTasksToLocalStorage } from "@/utils/localStorageUtils";
+import { toast } from "react-toastify";
 
 type State = {
   tasks: Task[];
@@ -30,7 +30,6 @@ type State = {
   isDeleteDialogOpen: boolean;
   taskToEdit: Task | null;
   taskToDelete: string | null;
-  alertMessage: string | null;
 };
 
 type Action =
@@ -42,8 +41,7 @@ type Action =
   | { type: "SET_SELECTED_TASK_ID"; payload: string | null }
   | { type: "TOGGLE_DETAIL_MODAL"; payload: boolean }
   | { type: "TOGGLE_EDIT_MODAL"; payload: boolean; task?: Task | null }
-  | { type: "TOGGLE_DELETE_DIALOG"; payload: boolean; taskId?: string | null }
-  | { type: "SET_ALERT_MESSAGE"; payload: string | null };
+  | { type: "TOGGLE_DELETE_DIALOG"; payload: boolean; taskId?: string | null };
 
 const initialState: State = {
   tasks: [],
@@ -57,7 +55,6 @@ const initialState: State = {
   isDeleteDialogOpen: false,
   taskToEdit: null,
   taskToDelete: null,
-  alertMessage: null,
 };
 
 function reducer(state: State, action: Action): State {
@@ -88,8 +85,6 @@ function reducer(state: State, action: Action): State {
         isDeleteDialogOpen: action.payload,
         taskToDelete: action.taskId || null,
       };
-    case "SET_ALERT_MESSAGE":
-      return { ...state, alertMessage: action.payload };
     default:
       return state;
   }
@@ -101,30 +96,6 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
   useEffect(() => {
     dispatch({ type: "SET_TASKS", payload: tasks });
   }, [tasks]);
-
-  useEffect(() => {
-    if (state.alertMessage) {
-      const timer = setTimeout(
-        () => dispatch({ type: "SET_ALERT_MESSAGE", payload: null }),
-        5000,
-      );
-      return () => clearTimeout(timer);
-    }
-  }, [state.alertMessage]);
-
-  useEffect(() => {
-    if (
-      state.isDetailModalOpen ||
-      state.isEditModalOpen ||
-      state.isDeleteDialogOpen
-    ) {
-      dispatch({ type: "SET_ALERT_MESSAGE", payload: null });
-    }
-  }, [
-    state.isDetailModalOpen,
-    state.isEditModalOpen,
-    state.isDeleteDialogOpen,
-  ]);
 
   const sortedTasks = [...state.tasks].sort((a, b) => {
     if (state.sortKey) {
@@ -175,10 +146,7 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
     );
     dispatch({ type: "SET_TASKS", payload: uniqueTasks });
     saveTasksToLocalStorage(uniqueTasks);
-    dispatch({
-      type: "SET_ALERT_MESSAGE",
-      payload: `Task '${newTask.title}' has been added successfully!`,
-    });
+    toast.success(`Task '${newTask.task}' has been added successfully!`);
   };
 
   const openTaskDetailModal = (taskId: string) => {
@@ -203,10 +171,7 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
     );
     dispatch({ type: "SET_TASKS", payload: updatedTasks });
     saveTasksToLocalStorage(updatedTasks);
-    dispatch({
-      type: "SET_ALERT_MESSAGE",
-      payload: `Task '${updatedTask.title}' has been updated successfully!`,
-    });
+    toast.success(`Task '${updatedTask.task}' has been updated successfully!`);
     dispatch({ type: "TOGGLE_EDIT_MODAL", payload: false });
   };
 
@@ -220,10 +185,9 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
       );
       dispatch({ type: "SET_TASKS", payload: updatedTasks });
       saveTasksToLocalStorage(updatedTasks);
-      dispatch({
-        type: "SET_ALERT_MESSAGE",
-        payload: `Task '${taskToDeleteObj?.title || "Unknown Task"}' has been deleted successfully!`,
-      });
+      toast.success(
+        `Task '${taskToDeleteObj?.task || "Unknown Task"}' has been deleted successfully!`,
+      );
       dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: false });
     }
   };
@@ -232,14 +196,6 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
     <>
       <AddTaskModal onAddTask={openTaskAddModal} />
       <div className="rounded-lg shadow-sm overflow-hidden">
-        {state.alertMessage &&
-          !state.isDetailModalOpen &&
-          !state.isEditModalOpen &&
-          !state.isDeleteDialogOpen && (
-            <div className="mb-4">
-              <AlertNotification message={state.alertMessage} />
-            </div>
-          )}
         <Table className="w-full border border-gray-200 dark:border-gray-700">
           <TableHeader
             sortKey={state.sortKey}
@@ -270,10 +226,10 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
         {state.isDetailModalOpen && state.selectedTaskId && (
           <DetailTaskModal
             taskId={state.selectedTaskId}
-            isOpen={state.isDetailModalOpen}
             onClose={() =>
               dispatch({ type: "TOGGLE_DETAIL_MODAL", payload: false })
             }
+            isOpen={state.isDetailModalOpen}
           />
         )}
         {state.isEditModalOpen && state.taskToEdit && (
@@ -288,31 +244,24 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
         {state.isDeleteDialogOpen && (
           <AlertDialog
             open={state.isDeleteDialogOpen}
-            onOpenChange={(open) =>
-              dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: open })
+            onOpenChange={() =>
+              dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: false })
             }
           >
             <AlertDialogContent>
-              <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+              <AlertDialogTitle>Delete Task</AlertDialogTitle>
               <AlertDialogDescription>
                 Are you sure you want to delete this task? This action cannot be
                 undone.
               </AlertDialogDescription>
-              <div className="flex gap-4 mt-4">
+              <div className="flex gap-2">
                 <AlertDialogAction
                   onClick={deleteTask}
-                  className="bg-red-500 text-white hover:bg-red-600"
+                  className="bg-red-500 hover:bg-red-600 text-white"
                 >
                   Delete
                 </AlertDialogAction>
-                <AlertDialogCancel
-                  onClick={() =>
-                    dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: false })
-                  }
-                  className="bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600"
-                >
-                  Cancel
-                </AlertDialogCancel>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
               </div>
             </AlertDialogContent>
           </AlertDialog>
