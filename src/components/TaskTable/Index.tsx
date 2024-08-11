@@ -8,6 +8,15 @@ import { AddTaskModal } from "@/components/modal/AddTaskModal";
 import { DetailTaskModal } from "@/components/modal/DetailTaskModal";
 import { UpdateTaskModal } from "@/components/modal/UpdateTaskModal";
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogTitle,
@@ -30,6 +39,8 @@ type State = {
   isDeleteDialogOpen: boolean;
   taskToEdit: Task | null;
   taskToDelete: string | null;
+  statusFilter: string | null;
+  priorityFilter: "all" | "Low" | "Medium" | "High" | null;
 };
 
 type Action =
@@ -41,7 +52,12 @@ type Action =
   | { type: "SET_SELECTED_TASK_ID"; payload: string | null }
   | { type: "TOGGLE_DETAIL_MODAL"; payload: boolean }
   | { type: "TOGGLE_EDIT_MODAL"; payload: boolean; task?: Task | null }
-  | { type: "TOGGLE_DELETE_DIALOG"; payload: boolean; taskId?: string | null };
+  | { type: "TOGGLE_DELETE_DIALOG"; payload: boolean; taskId?: string | null }
+  | { type: "SET_STATUS_FILTER"; payload: string | null }
+  | {
+      type: "SET_PRIORITY_FILTER";
+      payload: "all" | "Low" | "Medium" | "High" | null;
+    };
 
 const initialState: State = {
   tasks: [],
@@ -55,6 +71,8 @@ const initialState: State = {
   isDeleteDialogOpen: false,
   taskToEdit: null,
   taskToDelete: null,
+  statusFilter: null,
+  priorityFilter: null,
 };
 
 function reducer(state: State, action: Action): State {
@@ -85,19 +103,38 @@ function reducer(state: State, action: Action): State {
         isDeleteDialogOpen: action.payload,
         taskToDelete: action.taskId || null,
       };
+    case "SET_STATUS_FILTER":
+      return { ...state, statusFilter: action.payload };
+    case "SET_PRIORITY_FILTER":
+      return { ...state, priorityFilter: action.payload };
     default:
       return state;
   }
 }
 
 export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
-  const [state, dispatch] = useReducer(reducer, { ...initialState, tasks });
+  const [state, dispatch] = useReducer(reducer, {
+    ...initialState,
+    tasks,
+  });
 
   useEffect(() => {
     dispatch({ type: "SET_TASKS", payload: tasks });
   }, [tasks]);
 
-  const sortedTasks = [...state.tasks].sort((a, b) => {
+  useEffect(() => {
+    dispatch({ type: "SET_TASKS", payload: state.tasks });
+  }, [state.tasks]);
+
+  const filteredTasks = state.tasks
+    .filter((task) =>
+      state.statusFilter ? task.status === state.statusFilter : true,
+    )
+    .filter((task) =>
+      state.priorityFilter ? task.priority === state.priorityFilter : true,
+    );
+
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
     if (state.sortKey) {
       const aValue = a[state.sortKey as keyof Task];
       const bValue = b[state.sortKey as keyof Task];
@@ -116,6 +153,22 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
   const indexOfLastTask = state.currentPage * state.tasksPerPage;
   const indexOfFirstTask = indexOfLastTask - state.tasksPerPage;
   const currentTasks = sortedTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  const handleStatusFilterChange = (value: string) => {
+    dispatch({
+      type: "SET_STATUS_FILTER",
+      payload: value === "all" ? null : value,
+    });
+  };
+
+  const handlePriorityFilterChange = (
+    value: "all" | "Low" | "Medium" | "High",
+  ) => {
+    dispatch({
+      type: "SET_PRIORITY_FILTER",
+      payload: value === "all" ? null : value,
+    });
+  };
 
   const handleSort = (key: keyof Task) => {
     if (state.sortKey === key) {
@@ -186,87 +239,115 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
       dispatch({ type: "SET_TASKS", payload: updatedTasks });
       saveTasksToLocalStorage(updatedTasks);
       toast.success(
-        `Task '${taskToDeleteObj?.task || "Unknown Task"}' has been deleted successfully!`,
+        `Task '${taskToDeleteObj?.task}' has been deleted successfully!`,
       );
       dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: false });
     }
   };
 
   return (
-    <>
-      <AddTaskModal onAddTask={openTaskAddModal} />
-      <div className="rounded-lg shadow-sm overflow-hidden">
-        <Table className="w-full border border-gray-200 dark:border-gray-700">
-          <TableHeader
-            sortKey={state.sortKey}
-            sortDirection={state.sortDirection}
-            onSort={handleSort}
-          />
-          <TableBody
-            tasks={currentTasks}
-            selectedTaskId={state.selectedTaskId}
-            setSelectedTaskId={(id) =>
-              dispatch({ type: "SET_SELECTED_TASK_ID", payload: id })
-            }
-            setTasks={(tasks) =>
-              dispatch({ type: "SET_TASKS", payload: tasks })
-            }
-            openTaskDetailModal={openTaskDetailModal}
-            openTaskEditModal={openTaskEditModal}
-            openDeleteDialog={openDeleteDialog}
-          />
-        </Table>
-        <Pagination
-          currentPage={state.currentPage}
-          totalPages={totalPages}
-          tasksPerPage={state.tasksPerPage}
-          onPageChange={handlePageChange}
-          onTasksPerPageChange={handleTasksPerPageChange}
+    <div className="flex flex-col">
+      <div className="flex items-center space-x-4 mb-4">
+        <AddTaskModal
+          isOpen={state.isEditModalOpen}
+          onClose={() =>
+            dispatch({ type: "TOGGLE_EDIT_MODAL", payload: false })
+          }
+          onAddTask={openTaskAddModal}
         />
-        {state.isDetailModalOpen && state.selectedTaskId && (
-          <DetailTaskModal
-            taskId={state.selectedTaskId}
-            onClose={() =>
-              dispatch({ type: "TOGGLE_DETAIL_MODAL", payload: false })
-            }
-            isOpen={state.isDetailModalOpen}
-          />
-        )}
-        {state.isEditModalOpen && state.taskToEdit && (
-          <UpdateTaskModal
-            taskToUpdate={state.taskToEdit}
-            onUpdateTask={updateTask}
-            onClose={() => {
-              dispatch({ type: "TOGGLE_EDIT_MODAL", payload: false });
-            }}
-          />
-        )}
-        {state.isDeleteDialogOpen && (
-          <AlertDialog
-            open={state.isDeleteDialogOpen}
-            onOpenChange={() =>
-              dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: false })
-            }
-          >
-            <AlertDialogContent>
-              <AlertDialogTitle>Delete Task</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this task? This action cannot be
-                undone.
-              </AlertDialogDescription>
-              <div className="flex gap-2">
-                <AlertDialogAction
-                  onClick={deleteTask}
-                  className="bg-red-500 hover:bg-red-600 text-white"
-                >
-                  Delete
-                </AlertDialogAction>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-              </div>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+        <div className="w-32 text-sm">
+          <Select onValueChange={handleStatusFilterChange}>
+            <SelectTrigger className=" p-2">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent className="p-1">
+              <SelectGroup>
+                <SelectLabel>Status</SelectLabel>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-32 text-sm">
+          <div className="w-32 text-sm">
+            <Select onValueChange={handlePriorityFilterChange}>
+              <SelectTrigger className=" p-2">
+                <SelectValue placeholder="Priority" />
+              </SelectTrigger>
+              <SelectContent className="p-1">
+                <SelectGroup>
+                  <SelectLabel>Priority</SelectLabel>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
-    </>
+      <Table>
+        <TableHeader
+          onSort={handleSort}
+          sortKey={state.sortKey}
+          sortDirection={state.sortDirection}
+        />
+        <TableBody
+          tasks={currentTasks}
+          onEdit={openTaskEditModal}
+          onDetail={openTaskDetailModal}
+          onDelete={openDeleteDialog}
+        />
+      </Table>
+      <Pagination
+        currentPage={state.currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        tasksPerPage={state.tasksPerPage}
+        onTasksPerPageChange={handleTasksPerPageChange}
+      />
+      <DetailTaskModal
+        isOpen={state.isDetailModalOpen}
+        onClose={() =>
+          dispatch({ type: "TOGGLE_DETAIL_MODAL", payload: false })
+        }
+        taskId={state.selectedTaskId}
+      />
+      <UpdateTaskModal
+        isOpen={state.isEditModalOpen}
+        taskToUpdate={state.taskToEdit}
+        onUpdateTask={updateTask}
+        onClose={() => dispatch({ type: "TOGGLE_EDIT_MODAL", payload: false })}
+      />
+      <AlertDialog
+        open={state.isDeleteDialogOpen}
+        onOpenChange={(open) =>
+          dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: open })
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogTitle>Delete Task</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this task?
+          </AlertDialogDescription>
+          <div className="flex gap-4 mt-4">
+            <AlertDialogAction onClick={deleteTask}>
+              Yes, delete
+            </AlertDialogAction>
+            <AlertDialogCancel
+              onClick={() =>
+                dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: false })
+              }
+            >
+              Cancel
+            </AlertDialogCancel>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

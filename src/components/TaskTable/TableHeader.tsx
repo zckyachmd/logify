@@ -25,7 +25,7 @@ export function TableHeader({
   return (
     <TableHeaderComponent>
       <TableRow className="bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
-        {["task", "title", "status", "priority"].map((column) => (
+        {["task", "title", "priority", "status"].map((column) => (
           <TableCell
             key={column}
             onClick={() => onSort(column as keyof Task)}

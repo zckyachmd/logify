@@ -6,9 +6,9 @@ export interface Task {
   task: string;
   title: string;
   detail: string;
-  status: TaskStatus;
-  priority: TaskPriority;
+  priority: string;
   deadline: string;
+  status: TaskStatus;
 }
 
 export interface TaskTableProps {
@@ -23,12 +23,9 @@ export type TableHeaderProps = {
 
 export interface TableBodyProps {
   tasks: Task[];
-  selectedTaskId: string | null;
-  setSelectedTaskId: (id: string | null) => void;
-  setTasks: (tasks: Task[]) => void;
-  openTaskDetailModal: (taskId: string) => void;
-  openTaskEditModal: (taskId: string) => void;
-  openDeleteDialog: (taskId: string) => void;
+  onEdit: (taskId: string) => void;
+  onDetail: (taskId: string) => void;
+  onDelete: (taskId: string) => void;
 }
 
 export interface TaskFormProps {
@@ -44,18 +41,21 @@ export interface TaskFormProps {
   onChangeStatus?: (value: TaskStatus) => void;
 }
 
-export type AddTaskModalProps = {
-  onAddTask: (task: Task) => void;
-};
-
-export interface TaskDetailModalProps {
-  taskId: string;
+export interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onAddTask: (newTask: Task) => void;
 }
 
+export type TaskDetailModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  taskId: string | null;
+};
+
 export interface UpdateTaskModalProps {
-  taskToUpdate: Task;
+  isOpen: boolean;
+  taskToUpdate: Task | null;
   onUpdateTask: (updatedTask: Task) => void;
   onClose: () => void;
 }

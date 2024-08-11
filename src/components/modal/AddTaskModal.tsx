@@ -65,7 +65,7 @@ export function AddTaskModal({ onAddTask }: AddTaskModalProps) {
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button className="flex items-center space-x-2 bg-blue-500 text-white hover:bg-blue-600 transition-all rounded-lg py-2 px-4 mb-4">
+          <Button className="flex items-center space-x-2 bg-blue-500 text-white hover:bg-blue-600 transition-all rounded-lg py-1 px-4">
             <Plus className="w-4 h-4" />
             <span className="font-semibold">Add Task</span>
           </Button>

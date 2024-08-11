@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,19 +9,14 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { getTasksFromLocalStorage } from "@/utils/localStorageUtils";
-import {
-  Task,
-  TaskPriority,
-  TaskStatus,
-  TaskDetailModalProps,
-} from "@/models/Task";
+import { Task, TaskDetailModalProps } from "@/models/Task";
 import { TaskForm } from "@/components/form/TaskForm";
 import { X } from "lucide-react";
 
 export function DetailTaskModal({
-  taskId,
   isOpen,
   onClose,
+  taskId,
 }: TaskDetailModalProps) {
   const [task, setTask] = useState<Task | null>(null);
 
@@ -31,16 +26,9 @@ export function DetailTaskModal({
       const foundTask = tasks.find((t) => t.id === taskId) || null;
       setTask(foundTask);
     }
-  }, [taskId]);
+  }, [taskId, isOpen]);
 
-  const handleChange = useCallback(
-    (field: keyof Task) => (value: string | TaskPriority | TaskStatus) => {
-      setTask((prev) => (prev ? { ...prev, [field]: value } : null));
-    },
-    [],
-  );
-
-  if (!isOpen || !task) return null;
+  if (!isOpen) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -57,12 +45,12 @@ export function DetailTaskModal({
             onGenerateTaskId={() => {}}
             isCreate={false}
             isUpdate={false}
-            onChangeTask={handleChange("task")}
-            onChangeTitle={handleChange("title")}
-            onChangeDetail={handleChange("detail")}
-            onChangePriority={handleChange("priority")}
-            onChangeDeadline={handleChange("deadline")}
-            onChangeStatus={handleChange("status")}
+            onChangeTask={() => {}}
+            onChangeTitle={() => {}}
+            onChangeDetail={() => {}}
+            onChangePriority={() => {}}
+            onChangeDeadline={() => {}}
+            onChangeStatus={() => {}}
           />
         )}
         <DialogFooter>

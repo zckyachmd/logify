@@ -10,9 +10,9 @@ import { MoreHorizontal } from "lucide-react";
 
 export function TableBody({
   tasks,
-  openTaskDetailModal,
-  openTaskEditModal,
-  openDeleteDialog,
+  onEdit,
+  onDetail,
+  onDelete,
 }: TableBodyProps) {
   return (
     <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -35,10 +35,10 @@ export function TableBody({
               {task.title}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              {task.status}
+              {task.priority}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-              {task.priority}
+              {task.status}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <DropdownMenu>
@@ -51,15 +51,13 @@ export function TableBody({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem
-                    onClick={() => openTaskDetailModal(task.id)}
-                  >
+                  <DropdownMenuItem onClick={() => onDetail(task.id)}>
                     View
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => openTaskEditModal(task.id)}>
+                  <DropdownMenuItem onClick={() => onEdit(task.id)}>
                     Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => openDeleteDialog(task.id)}>
+                  <DropdownMenuItem onClick={() => onDelete(task.id)}>
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>

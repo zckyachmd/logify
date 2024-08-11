@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { TaskForm } from "@/components/form/TaskForm";
 import { X } from "lucide-react";
-import { Task, UpdateTaskModalProps } from "@/models/Task";
+import { Task, TaskStatus, UpdateTaskModalProps } from "@/models/Task";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -18,19 +18,21 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function UpdateTaskModal({
+  isOpen,
   taskToUpdate,
   onUpdateTask,
   onClose,
 }: UpdateTaskModalProps) {
   const [formState, setFormState] = useState({
-    id: taskToUpdate.id,
-    task: taskToUpdate.task,
-    title: taskToUpdate.title,
-    detail: taskToUpdate.detail,
-    priority: taskToUpdate.priority,
-    deadline: taskToUpdate.deadline,
-    status: taskToUpdate.status,
+    id: taskToUpdate?.id || "",
+    task: taskToUpdate?.task || "",
+    title: taskToUpdate?.title || "",
+    detail: taskToUpdate?.detail || "",
+    priority: taskToUpdate?.priority || "",
+    deadline: taskToUpdate?.deadline || "",
+    status: taskToUpdate?.status || "Pending",
   });
+
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
@@ -55,8 +57,9 @@ export function UpdateTaskModal({
     const { task, title, detail, priority, deadline, status } = formState;
     if (task && title && detail && priority && deadline && status) {
       const updatedTask: Task = {
-        ...taskToUpdate,
+        ...taskToUpdate!,
         ...formState,
+        status: status as TaskStatus,
       };
 
       onUpdateTask(updatedTask);
@@ -68,7 +71,7 @@ export function UpdateTaskModal({
 
   return (
     <>
-      <Dialog open={!!taskToUpdate} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-lg p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
           <DialogHeader>
             <DialogTitle>Update Task</DialogTitle>
