@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,7 +9,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { getTasksFromLocalStorage } from "@/utils/localStorageUtils";
-import { Task, TaskDetailModalProps } from "@/models/Task";
+import {
+  Task,
+  TaskPriority,
+  TaskStatus,
+  TaskDetailModalProps,
+} from "@/models/Task";
 import { TaskForm } from "@/components/form/TaskForm";
 import { X } from "lucide-react";
 
@@ -28,6 +33,13 @@ export function DetailTaskModal({
     }
   }, [taskId]);
 
+  const handleChange = useCallback(
+    (field: keyof Task) => (value: string | TaskPriority | TaskStatus) => {
+      setTask((prev) => (prev ? { ...prev, [field]: value } : null));
+    },
+    [],
+  );
+
   if (!isOpen || !task) return null;
 
   return (
@@ -41,14 +53,16 @@ export function DetailTaskModal({
         </DialogHeader>
         {task && (
           <TaskForm
-            task={task.task}
-            title={task.title}
-            detail={task.detail}
-            priority={task.priority}
-            deadline={task.deadline}
-            status={task.status}
+            defaultValues={task}
+            onGenerateTaskId={() => {}}
             isCreate={false}
             isUpdate={false}
+            onChangeTask={handleChange("task")}
+            onChangeTitle={handleChange("title")}
+            onChangeDetail={handleChange("detail")}
+            onChangePriority={handleChange("priority")}
+            onChangeDeadline={handleChange("deadline")}
+            onChangeStatus={handleChange("status")}
           />
         )}
         <DialogFooter>

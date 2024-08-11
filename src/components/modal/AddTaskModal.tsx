@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { TaskForm } from "@/components/form/TaskForm";
 import { X, Plus } from "lucide-react";
-import { Task, TaskPriority, AddTaskModalProps } from "@/models/Task";
+import { Task, AddTaskModalProps } from "@/models/Task";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -20,34 +20,35 @@ import {
 
 export function AddTaskModal({ onAddTask }: AddTaskModalProps) {
   const [open, setOpen] = useState(false);
-  const [task, setTask] = useState("");
-  const [title, setTitle] = useState("");
-  const [detail, setDetail] = useState("");
-  const [priority, setPriority] = useState<TaskPriority>("Medium");
-  const [deadline, setDeadline] = useState<string>("");
+  const [taskData, setTaskData] = useState<Task>({
+    task: "",
+    title: "",
+    detail: "",
+    priority: "Medium",
+    deadline: "",
+    status: "Pending",
+    id: "",
+  });
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     if (!open) {
-      setTask("");
-      setTitle("");
-      setDetail("");
-      setPriority("Medium");
-      setDeadline("");
+      setTaskData({
+        task: "",
+        title: "",
+        detail: "",
+        priority: "Medium",
+        deadline: "",
+        status: "Pending",
+        id: "",
+      });
     }
   }, [open]);
 
   const handleSubmit = () => {
+    const { task, title, detail, priority, deadline } = taskData;
     if (task && title && detail && priority && deadline) {
-      const newTask: Task = {
-        task,
-        title,
-        detail,
-        status: "Pending",
-        priority,
-        deadline,
-        id: crypto.randomUUID(),
-      };
+      const newTask: Task = { ...taskData, id: crypto.randomUUID() };
 
       onAddTask(newTask);
       setOpen(false);
@@ -58,10 +59,6 @@ export function AddTaskModal({ onAddTask }: AddTaskModalProps) {
 
   const handleDialogClose = () => {
     setOpen(false);
-  };
-
-  const handleGenerateTaskId = () => {
-    setTask(`TS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
   };
 
   return (
@@ -81,19 +78,28 @@ export function AddTaskModal({ onAddTask }: AddTaskModalProps) {
             </DialogDescription>
           </DialogHeader>
           <TaskForm
-            task={task}
-            title={title}
-            detail={detail}
-            priority={priority}
-            deadline={deadline}
-            onChangeTask={setTask}
-            onChangeTitle={setTitle}
-            onChangeDetail={setDetail}
-            onChangePriority={setPriority}
-            onChangeDeadline={setDeadline}
-            onGenerateTaskId={handleGenerateTaskId}
+            defaultValues={taskData}
+            onGenerateTaskId={() =>
+              setTaskData({ ...taskData, id: crypto.randomUUID() })
+            }
             isCreate={true}
             isUpdate={false}
+            onChangeTask={(value) =>
+              setTaskData((prev) => ({ ...prev, task: value }))
+            }
+            onChangeTitle={(value) =>
+              setTaskData((prev) => ({ ...prev, title: value }))
+            }
+            onChangeDetail={(value) =>
+              setTaskData((prev) => ({ ...prev, detail: value }))
+            }
+            onChangePriority={(value) =>
+              setTaskData((prev) => ({ ...prev, priority: value }))
+            }
+            onChangeDeadline={(value) =>
+              setTaskData((prev) => ({ ...prev, deadline: value }))
+            }
+            onChangeStatus={() => {}}
           />
           <DialogFooter>
             <Button
@@ -111,23 +117,21 @@ export function AddTaskModal({ onAddTask }: AddTaskModalProps) {
               Add Task
             </Button>
           </DialogFooter>
+          {showAlert && (
+            <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
+              <AlertDialogContent>
+                <p>Please fill in all required fields.</p>
+                <AlertDialogAction
+                  className="mt-2 bg-red-500 text-white hover:bg-red-600"
+                  onClick={() => setShowAlert(false)}
+                >
+                  Close
+                </AlertDialogAction>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </DialogContent>
       </Dialog>
-      {showAlert && (
-        <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
-          <AlertDialogContent>
-            <p className="text-center">Please fill out all fields.</p>
-            <div className="flex justify-end mt-4">
-              <AlertDialogAction
-                onClick={() => setShowAlert(false)}
-                className="bg-blue-500 text-white hover:bg-blue-600 transition-all"
-              >
-                OK
-              </AlertDialogAction>
-            </div>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
     </>
   );
 }

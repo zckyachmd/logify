@@ -32,21 +32,16 @@ export interface TableBodyProps {
 }
 
 export interface TaskFormProps {
-  task: string;
-  title: string;
-  detail: string;
-  priority: TaskPriority;
-  deadline: string;
-  status?: string;
+  defaultValues: Task;
+  isCreate?: boolean;
+  isUpdate?: boolean;
+  onGenerateTaskId?: () => void;
   onChangeTask?: (value: string) => void;
   onChangeTitle?: (value: string) => void;
   onChangeDetail?: (value: string) => void;
   onChangePriority?: (value: TaskPriority) => void;
   onChangeDeadline?: (value: string) => void;
   onChangeStatus?: (value: TaskStatus) => void;
-  onGenerateTaskId?: () => void;
-  isCreate?: boolean;
-  isUpdate?: boolean;
 }
 
 export type AddTaskModalProps = {

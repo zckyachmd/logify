@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import { Table } from "@/components/ui/table";
 import { TableHeader } from "@/components/TaskTable/TableHeader";
 import { TableBody } from "@/components/TaskTable/TableBody";
 import { Pagination } from "@/components/TaskTable/TablePagination";
-import { Task } from "@/models/Task";
+import { Task, TaskTableProps } from "@/models/Task";
 import { AddTaskModal } from "@/components/modal/AddTaskModal";
 import { DetailTaskModal } from "@/components/modal/DetailTaskModal";
 import { UpdateTaskModal } from "@/components/modal/UpdateTaskModal";
@@ -18,131 +18,213 @@ import {
 import { AlertNotification } from "@/components/AlertNotification";
 import { saveTasksToLocalStorage } from "@/utils/localStorageUtils";
 
-interface TaskTableProps {
+type State = {
   tasks: Task[];
+  sortKey: keyof Task | null;
+  sortDirection: "asc" | "desc";
+  currentPage: number;
+  tasksPerPage: number;
+  selectedTaskId: string | null;
+  isDetailModalOpen: boolean;
+  isEditModalOpen: boolean;
+  isDeleteDialogOpen: boolean;
+  taskToEdit: Task | null;
+  taskToDelete: string | null;
+  alertMessage: string | null;
+};
+
+type Action =
+  | { type: "SET_TASKS"; payload: Task[] }
+  | { type: "SET_SORT_KEY"; payload: keyof Task | null }
+  | { type: "SET_SORT_DIRECTION"; payload: "asc" | "desc" }
+  | { type: "SET_CURRENT_PAGE"; payload: number }
+  | { type: "SET_TASKS_PER_PAGE"; payload: number }
+  | { type: "SET_SELECTED_TASK_ID"; payload: string | null }
+  | { type: "TOGGLE_DETAIL_MODAL"; payload: boolean }
+  | { type: "TOGGLE_EDIT_MODAL"; payload: boolean; task?: Task | null }
+  | { type: "TOGGLE_DELETE_DIALOG"; payload: boolean; taskId?: string | null }
+  | { type: "SET_ALERT_MESSAGE"; payload: string | null };
+
+const initialState: State = {
+  tasks: [],
+  sortKey: null,
+  sortDirection: "asc",
+  currentPage: 1,
+  tasksPerPage: 10,
+  selectedTaskId: null,
+  isDetailModalOpen: false,
+  isEditModalOpen: false,
+  isDeleteDialogOpen: false,
+  taskToEdit: null,
+  taskToDelete: null,
+  alertMessage: null,
+};
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "SET_TASKS":
+      return { ...state, tasks: action.payload };
+    case "SET_SORT_KEY":
+      return { ...state, sortKey: action.payload };
+    case "SET_SORT_DIRECTION":
+      return { ...state, sortDirection: action.payload };
+    case "SET_CURRENT_PAGE":
+      return { ...state, currentPage: action.payload };
+    case "SET_TASKS_PER_PAGE":
+      return { ...state, tasksPerPage: action.payload, currentPage: 1 };
+    case "SET_SELECTED_TASK_ID":
+      return { ...state, selectedTaskId: action.payload };
+    case "TOGGLE_DETAIL_MODAL":
+      return { ...state, isDetailModalOpen: action.payload };
+    case "TOGGLE_EDIT_MODAL":
+      return {
+        ...state,
+        isEditModalOpen: action.payload,
+        taskToEdit: action.task || null,
+      };
+    case "TOGGLE_DELETE_DIALOG":
+      return {
+        ...state,
+        isDeleteDialogOpen: action.payload,
+        taskToDelete: action.taskId || null,
+      };
+    case "SET_ALERT_MESSAGE":
+      return { ...state, alertMessage: action.payload };
+    default:
+      return state;
+  }
 }
 
 export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
-  const [sortKey, setSortKey] = useState<keyof Task | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [tasksPerPage, setTasksPerPage] = useState(10);
-
-  const [tasksState, setTasks] = useState<Task[]>(tasks);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
-  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(reducer, { ...initialState, tasks });
 
   useEffect(() => {
-    setTasks(tasks);
+    dispatch({ type: "SET_TASKS", payload: tasks });
   }, [tasks]);
 
   useEffect(() => {
-    if (alertMessage) {
-      const timer = setTimeout(() => setAlertMessage(null), 5000);
+    if (state.alertMessage) {
+      const timer = setTimeout(
+        () => dispatch({ type: "SET_ALERT_MESSAGE", payload: null }),
+        5000,
+      );
       return () => clearTimeout(timer);
     }
-  }, [alertMessage]);
+  }, [state.alertMessage]);
 
   useEffect(() => {
-    if (isDetailModalOpen || isEditModalOpen || isDeleteDialogOpen) {
-      setAlertMessage(null);
+    if (
+      state.isDetailModalOpen ||
+      state.isEditModalOpen ||
+      state.isDeleteDialogOpen
+    ) {
+      dispatch({ type: "SET_ALERT_MESSAGE", payload: null });
     }
-  }, [isDetailModalOpen, isEditModalOpen, isDeleteDialogOpen]);
+  }, [
+    state.isDetailModalOpen,
+    state.isEditModalOpen,
+    state.isDeleteDialogOpen,
+  ]);
 
-  const sortedTasks = [...tasksState].sort((a, b) => {
-    if (sortKey) {
-      if (a[sortKey] < b[sortKey]) return sortDirection === "asc" ? -1 : 1;
-      if (a[sortKey] > b[sortKey]) return sortDirection === "asc" ? 1 : -1;
+  const sortedTasks = [...state.tasks].sort((a, b) => {
+    if (state.sortKey) {
+      const aValue = a[state.sortKey as keyof Task];
+      const bValue = b[state.sortKey as keyof Task];
+
+      if (aValue === undefined || bValue === undefined) {
+        return 0;
+      }
+
+      if (aValue < bValue) return state.sortDirection === "asc" ? -1 : 1;
+      if (aValue > bValue) return state.sortDirection === "asc" ? 1 : -1;
       return 0;
     }
     return 0;
   });
 
-  const indexOfLastTask = currentPage * tasksPerPage;
-  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const indexOfLastTask = state.currentPage * state.tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - state.tasksPerPage;
   const currentTasks = sortedTasks.slice(indexOfFirstTask, indexOfLastTask);
 
   const handleSort = (key: keyof Task) => {
-    if (sortKey === key) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    if (state.sortKey === key) {
+      dispatch({
+        type: "SET_SORT_DIRECTION",
+        payload: state.sortDirection === "asc" ? "desc" : "asc",
+      });
     } else {
-      setSortKey(key);
-      setSortDirection("asc");
+      dispatch({ type: "SET_SORT_KEY", payload: key });
+      dispatch({ type: "SET_SORT_DIRECTION", payload: "asc" });
     }
   };
 
   const handleTasksPerPageChange = (value: number) => {
-    setTasksPerPage(value);
-    setCurrentPage(1);
+    dispatch({ type: "SET_TASKS_PER_PAGE", payload: value });
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    dispatch({ type: "SET_CURRENT_PAGE", payload: page });
   };
 
-  const totalPages = Math.ceil(tasksState.length / tasksPerPage);
+  const totalPages = Math.ceil(state.tasks.length / state.tasksPerPage);
 
   const openTaskAddModal = (newTask: Task) => {
-    const updatedTasks = [...tasks, newTask];
+    const updatedTasks = [...state.tasks, newTask];
     const uniqueTasks = Array.from(
       new Map(updatedTasks.map((task) => [task.id, task])).values(),
     );
-    setTasks(uniqueTasks);
+    dispatch({ type: "SET_TASKS", payload: uniqueTasks });
     saveTasksToLocalStorage(uniqueTasks);
-    setAlertMessage(`Task '${newTask.title}' has been added successfully!`);
+    dispatch({
+      type: "SET_ALERT_MESSAGE",
+      payload: `Task '${newTask.title}' has been added successfully!`,
+    });
   };
 
   const openTaskDetailModal = (taskId: string) => {
-    setSelectedTaskId(taskId);
-    setIsDetailModalOpen(true);
+    dispatch({ type: "SET_SELECTED_TASK_ID", payload: taskId });
+    dispatch({ type: "TOGGLE_DETAIL_MODAL", payload: true });
   };
 
   const openTaskEditModal = (taskId: string) => {
-    const task = tasksState.find((task) => task.id === taskId);
+    const task = state.tasks.find((task) => task.id === taskId);
     if (task) {
-      setTaskToEdit(task);
-      setIsEditModalOpen(true);
+      dispatch({ type: "TOGGLE_EDIT_MODAL", payload: true, task });
     }
   };
 
   const openDeleteDialog = (taskId: string) => {
-    setTaskToDelete(taskId);
-    setIsDeleteDialogOpen(true);
+    dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: true, taskId });
   };
 
   const updateTask = (updatedTask: Task) => {
-    const updatedTasks = tasksState.map((task) =>
+    const updatedTasks = state.tasks.map((task) =>
       task.id === updatedTask.id ? updatedTask : task,
     );
-    setTasks(updatedTasks);
+    dispatch({ type: "SET_TASKS", payload: updatedTasks });
     saveTasksToLocalStorage(updatedTasks);
-    setAlertMessage(
-      `Task '${updatedTask.title}' has been updated successfully!`,
-    );
-    setTaskToEdit(null);
-    setIsEditModalOpen(false);
+    dispatch({
+      type: "SET_ALERT_MESSAGE",
+      payload: `Task '${updatedTask.title}' has been updated successfully!`,
+    });
+    dispatch({ type: "TOGGLE_EDIT_MODAL", payload: false });
   };
 
   const deleteTask = () => {
-    if (taskToDelete) {
-      const taskToDeleteObj = tasksState.find(
-        (task) => task.id === taskToDelete,
+    if (state.taskToDelete) {
+      const taskToDeleteObj = state.tasks.find(
+        (task) => task.id === state.taskToDelete,
       );
-      const updatedTasks = tasksState.filter(
-        (task) => task.id !== taskToDelete,
+      const updatedTasks = state.tasks.filter(
+        (task) => task.id !== state.taskToDelete,
       );
-      setTasks(updatedTasks);
+      dispatch({ type: "SET_TASKS", payload: updatedTasks });
       saveTasksToLocalStorage(updatedTasks);
-      setAlertMessage(
-        `Task '${taskToDeleteObj?.title || "Unknown Task"}' has been deleted successfully!`,
-      );
-      setIsDeleteDialogOpen(false);
-      setTaskToDelete(null);
+      dispatch({
+        type: "SET_ALERT_MESSAGE",
+        payload: `Task '${taskToDeleteObj?.title || "Unknown Task"}' has been deleted successfully!`,
+      });
+      dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: false });
     }
   };
 
@@ -150,58 +232,65 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
     <>
       <AddTaskModal onAddTask={openTaskAddModal} />
       <div className="rounded-lg shadow-sm overflow-hidden">
-        {alertMessage &&
-          !isDetailModalOpen &&
-          !isEditModalOpen &&
-          !isDeleteDialogOpen && (
+        {state.alertMessage &&
+          !state.isDetailModalOpen &&
+          !state.isEditModalOpen &&
+          !state.isDeleteDialogOpen && (
             <div className="mb-4">
-              <AlertNotification message={alertMessage} />
+              <AlertNotification message={state.alertMessage} />
             </div>
           )}
         <Table className="w-full border border-gray-200 dark:border-gray-700">
           <TableHeader
-            sortKey={sortKey}
-            sortDirection={sortDirection}
+            sortKey={state.sortKey}
+            sortDirection={state.sortDirection}
             onSort={handleSort}
           />
           <TableBody
             tasks={currentTasks}
-            selectedTaskId={selectedTaskId}
-            setSelectedTaskId={setSelectedTaskId}
-            setTasks={setTasks}
+            selectedTaskId={state.selectedTaskId}
+            setSelectedTaskId={(id) =>
+              dispatch({ type: "SET_SELECTED_TASK_ID", payload: id })
+            }
+            setTasks={(tasks) =>
+              dispatch({ type: "SET_TASKS", payload: tasks })
+            }
             openTaskDetailModal={openTaskDetailModal}
             openTaskEditModal={openTaskEditModal}
             openDeleteDialog={openDeleteDialog}
           />
         </Table>
         <Pagination
-          currentPage={currentPage}
+          currentPage={state.currentPage}
           totalPages={totalPages}
-          tasksPerPage={tasksPerPage}
+          tasksPerPage={state.tasksPerPage}
           onPageChange={handlePageChange}
           onTasksPerPageChange={handleTasksPerPageChange}
         />
-        {isDetailModalOpen && selectedTaskId && (
+        {state.isDetailModalOpen && state.selectedTaskId && (
           <DetailTaskModal
-            taskId={selectedTaskId}
-            isOpen={isDetailModalOpen}
-            onClose={() => setIsDetailModalOpen(false)}
+            taskId={state.selectedTaskId}
+            isOpen={state.isDetailModalOpen}
+            onClose={() =>
+              dispatch({ type: "TOGGLE_DETAIL_MODAL", payload: false })
+            }
           />
         )}
-        {isEditModalOpen && taskToEdit && (
+        {state.isEditModalOpen && state.taskToEdit && (
           <UpdateTaskModal
-            taskToUpdate={taskToEdit}
+            taskToUpdate={state.taskToEdit}
             onUpdateTask={updateTask}
             onClose={() => {
-              setTaskToEdit(null);
-              setIsEditModalOpen(false);
+              dispatch({ type: "TOGGLE_EDIT_MODAL", payload: false });
             }}
           />
         )}
-        {isDeleteDialogOpen && (
+        {state.isDeleteDialogOpen && (
           <AlertDialog
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
+            open={state.isDeleteDialogOpen}
+            onOpenChange={(open) =>
+              dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: open })
+            }
           >
             <AlertDialogContent>
               <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
@@ -217,7 +306,9 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
                   Delete
                 </AlertDialogAction>
                 <AlertDialogCancel
-                  onClick={() => setIsDeleteDialogOpen(false)}
+                  onClick={() =>
+                    dispatch({ type: "TOGGLE_DELETE_DIALOG", payload: false })
+                  }
                   className="bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-200 hover:bg-gray-400 dark:hover:bg-gray-600"
                 >
                   Cancel

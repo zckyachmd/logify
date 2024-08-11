@@ -22,35 +22,41 @@ export function UpdateTaskModal({
   onUpdateTask,
   onClose,
 }: UpdateTaskModalProps) {
-  const [task, setTask] = useState(taskToUpdate.task);
-  const [title, setTitle] = useState(taskToUpdate.title);
-  const [detail, setDetail] = useState(taskToUpdate.detail);
-  const [priority, setPriority] = useState(taskToUpdate.priority);
-  const [deadline, setDeadline] = useState(taskToUpdate.deadline);
-  const [status, setStatus] = useState(taskToUpdate.status);
+  const [formState, setFormState] = useState({
+    id: taskToUpdate.id,
+    task: taskToUpdate.task,
+    title: taskToUpdate.title,
+    detail: taskToUpdate.detail,
+    priority: taskToUpdate.priority,
+    deadline: taskToUpdate.deadline,
+    status: taskToUpdate.status,
+  });
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     if (taskToUpdate) {
-      setTask(taskToUpdate.task);
-      setTitle(taskToUpdate.title);
-      setDetail(taskToUpdate.detail);
-      setPriority(taskToUpdate.priority);
-      setDeadline(taskToUpdate.deadline);
-      setStatus(taskToUpdate.status); // Perbarui status
+      setFormState({
+        id: taskToUpdate.id,
+        task: taskToUpdate.task,
+        title: taskToUpdate.title,
+        detail: taskToUpdate.detail,
+        priority: taskToUpdate.priority,
+        deadline: taskToUpdate.deadline,
+        status: taskToUpdate.status,
+      });
     }
   }, [taskToUpdate]);
 
+  const handleChange = (field: keyof typeof formState, value: string) => {
+    setFormState((prev) => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = () => {
+    const { task, title, detail, priority, deadline, status } = formState;
     if (task && title && detail && priority && deadline && status) {
       const updatedTask: Task = {
         ...taskToUpdate,
-        task,
-        title,
-        detail,
-        priority,
-        deadline,
-        status,
+        ...formState,
       };
 
       onUpdateTask(updatedTask);
@@ -71,20 +77,15 @@ export function UpdateTaskModal({
             </DialogDescription>
           </DialogHeader>
           <TaskForm
-            task={task}
-            title={title}
-            detail={detail}
-            priority={priority}
-            deadline={deadline}
-            status={status} // Pass status
-            onChangeTask={setTask}
-            onChangeTitle={setTitle}
-            onChangeDetail={setDetail}
-            onChangePriority={setPriority}
-            onChangeDeadline={setDeadline}
-            onChangeStatus={setStatus}
+            defaultValues={formState}
             isCreate={false}
             isUpdate={true}
+            onChangeTask={(value) => handleChange("task", value)}
+            onChangeTitle={(value) => handleChange("title", value)}
+            onChangeDetail={(value) => handleChange("detail", value)}
+            onChangePriority={(value) => handleChange("priority", value)}
+            onChangeDeadline={(value) => handleChange("deadline", value)}
+            onChangeStatus={(value) => handleChange("status", value)}
           />
           <DialogFooter>
             <Button
@@ -107,15 +108,13 @@ export function UpdateTaskModal({
       {showAlert && (
         <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
           <AlertDialogContent>
-            <p className="text-center">Please fill out all fields.</p>
-            <div className="flex justify-end mt-4">
-              <AlertDialogAction
-                onClick={() => setShowAlert(false)}
-                className="bg-blue-500 text-white hover:bg-blue-600 transition-all"
-              >
-                OK
-              </AlertDialogAction>
-            </div>
+            <p>Please fill in all required fields.</p>
+            <AlertDialogAction
+              className="mt-2 bg-red-500 text-white hover:bg-red-600"
+              onClick={() => setShowAlert(false)}
+            >
+              Close
+            </AlertDialogAction>
           </AlertDialogContent>
         </AlertDialog>
       )}

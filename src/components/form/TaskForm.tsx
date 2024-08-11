@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -7,45 +9,39 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { TaskStatus, TaskPriority, TaskFormProps } from "@/models/Task";
+import { TaskPriority, TaskStatus, TaskFormProps, Task } from "@/models/Task";
 
 export function TaskForm({
-  task,
-  title,
-  detail,
-  priority,
-  deadline,
-  status,
+  defaultValues,
+  isCreate = false,
+  isUpdate = false,
   onChangeTask,
   onChangeTitle,
   onChangeDetail,
   onChangePriority,
   onChangeDeadline,
   onChangeStatus,
-  onGenerateTaskId,
-  isCreate = false,
-  isUpdate = false,
 }: TaskFormProps) {
   const isReadOnly = !isCreate && !isUpdate;
   const isDisabled = !isCreate && isUpdate;
 
-  const handlePriorityChange = (value: string) => {
-    if (!isReadOnly && onChangePriority) {
-      onChangePriority(value as TaskPriority);
-    }
-  };
+  const { control, register, setValue } = useForm<Task>({
+    defaultValues,
+  });
 
-  const handleStatusChange = (value: TaskStatus) => {
-    if (!isReadOnly && onChangeStatus) {
-      onChangeStatus(value);
-    }
-  };
+  useEffect(() => {
+    setValue("task", defaultValues.task);
+    setValue("title", defaultValues.title);
+    setValue("detail", defaultValues.detail);
+    setValue("priority", defaultValues.priority);
+    setValue("deadline", defaultValues.deadline);
+    setValue("status", defaultValues.status);
+  }, [defaultValues, setValue]);
 
-  const handleGenerateTaskId = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    if (onGenerateTaskId && isCreate) {
-      onGenerateTaskId();
-    }
+  const handleGenerateTaskId = () => {
+    const newTaskId = `TS-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    setValue("task", newTaskId);
+    onChangeTask?.(newTaskId);
   };
 
   return (
@@ -56,17 +52,16 @@ export function TaskForm({
         </label>
         <Input
           type="text"
-          value={task}
-          onChange={(e) =>
-            !isReadOnly && onChangeTask && onChangeTask(e.target.value)
-          }
+          {...register("task")}
           disabled={isDisabled || isReadOnly}
           readOnly={isReadOnly}
           className="mt-1 w-full"
+          onChange={(e) => onChangeTask?.(e.target.value)}
         />
         {isCreate && (
           <div className="mt-2">
             <Button
+              type="button"
               onClick={handleGenerateTaskId}
               variant="outline"
               className="w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-gray-100"
@@ -82,13 +77,11 @@ export function TaskForm({
         </label>
         <Input
           type="text"
-          value={title}
-          onChange={(e) =>
-            !isReadOnly && onChangeTitle && onChangeTitle(e.target.value)
-          }
+          {...register("title")}
           disabled={isReadOnly}
           readOnly={isReadOnly}
           className="mt-1 w-full"
+          onChange={(e) => onChangeTitle?.(e.target.value)}
         />
       </div>
       <div>
@@ -96,33 +89,40 @@ export function TaskForm({
           Detail
         </label>
         <Textarea
-          value={detail}
-          onChange={(e) =>
-            !isReadOnly && onChangeDetail && onChangeDetail(e.target.value)
-          }
+          {...register("detail")}
           disabled={isReadOnly}
           readOnly={isReadOnly}
           className="mt-1 w-full"
+          onChange={(e) => onChangeDetail?.(e.target.value)}
         />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           Priority
         </label>
-        <Select
-          value={priority}
-          onValueChange={handlePriorityChange}
-          disabled={isReadOnly}
-        >
-          <SelectTrigger className="mt-1 w-full">
-            <span>{priority}</span>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Low">Low</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="High">High</SelectItem>
-          </SelectContent>
-        </Select>
+        <Controller
+          name="priority"
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={(value) => {
+                field.onChange(value);
+                onChangePriority?.(value as TaskPriority);
+              }}
+              disabled={isReadOnly}
+            >
+              <SelectTrigger className="mt-1 w-full">
+                <span>{field.value}</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Low">Low</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="High">High</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -130,13 +130,11 @@ export function TaskForm({
         </label>
         <Input
           type="date"
-          value={deadline}
-          onChange={(e) =>
-            !isReadOnly && onChangeDeadline && onChangeDeadline(e.target.value)
-          }
+          {...register("deadline")}
           disabled={isReadOnly}
           readOnly={isReadOnly}
           className="mt-1 w-full"
+          onChange={(e) => onChangeDeadline?.(e.target.value)}
         />
       </div>
       {!isCreate && (
@@ -144,20 +142,29 @@ export function TaskForm({
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Status
           </label>
-          <Select
-            value={status}
-            onValueChange={handleStatusChange}
-            disabled={isReadOnly}
-          >
-            <SelectTrigger className="mt-1 w-full">
-              <span>{status}</span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="In Progress">In Progress</SelectItem>
-              <SelectItem value="Completed">Completed</SelectItem>
-            </SelectContent>
-          </Select>
+          <Controller
+            name="status"
+            control={control}
+            render={({ field }) => (
+              <Select
+                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  onChangeStatus?.(value as TaskStatus);
+                }}
+                disabled={isReadOnly}
+              >
+                <SelectTrigger className="mt-1 w-full">
+                  <span>{field.value}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       )}
     </form>
