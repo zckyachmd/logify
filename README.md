@@ -1,30 +1,73 @@
-# React + TypeScript + Vite
+# Logify
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Logify is a task management application built with React.js, TypeScript, Tailwind CSS, and Bun. The project uses shadcn/ui for UI components, providing a modern and responsive interface.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Task Management**: Easily add, edit, and delete tasks.
+- **Dark and Light Themes**: Support for dark and light themes with a mode toggle.
+- **Search and Filter**: Search and filter tasks based on title, priority, and status.
+- **Task Details**: View detailed information about each task.
 
-## Expanding the ESLint configuration
+## Technologies Used
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+- **React.js**: JavaScript library for building user interfaces.
+- **TypeScript**: A superset of JavaScript that adds static types.
+- **Tailwind CSS**: Utility-first CSS framework for rapid and responsive styling.
+- **Bun**: A fast JavaScript bundler and runtime.
+- **shadcn/ui**: UI components for elegant styling and functionality.
 
-- Configure the top-level `parserOptions` property like this:
+## Installation
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+To get started with this project, make sure you have [Node.js](https://nodejs.org/) and [Bun](https://bun.sh/) installed. Then, follow these steps:
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+1. **Clone the Repository**:
+
+    ```bash
+    git clone https://github.com/zckyachmd/logify.git
+    cd logify
+    ```
+
+2. **Install Dependencies**:
+
+    ```bash
+    bun install
+    ```
+
+3. **Run the Project**:
+
+    ```bash
+    bun dev
+    ```
+
+    The project will run on `http://localhost:5173` by default.
+
+## Project Structure
+
+- **src/**: Main folder for source code.
+  - **components/**: Contains UI components using shadcn/ui.
+  - **lib/**: Library code.
+  - **models/**: Data models.
+  - **pages/**: Application pages.
+  - **routers/**: Application routers.
+  - **utils/**: Utility functions.
+- **public/**: Folder for public assets like images and favicons.
+- **tailwind.config.ts**: Tailwind CSS configuration.
+- **tsconfig.json**: TypeScript configuration.
+- **bun.config.ts**: Bun configuration.
+
+## Contributing
+
+If you would like to contribute to this project, please create an [issue](https://github.com/zckyachmd/logify/issues) or [pull request](https://github.com/zckyachmd/logify/pulls). All constructive and useful contributions are greatly appreciated!
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Contact
+
+If you have any questions, feel free to reach out to me at [hi@zacky.id](mailto:hi.zacky@id) or through [LinkedIn](https://www.linkedin.com/in/zackyachmad/).
+
+---
+
+Thank you for using Logify! I hope this application helps with your task management.

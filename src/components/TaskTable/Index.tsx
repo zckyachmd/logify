@@ -122,10 +122,6 @@ export function TaskTable({ tasks }: TaskTableProps): JSX.Element {
     dispatch({ type: "SET_TASKS", payload: tasks });
   }, [tasks]);
 
-  useEffect(() => {
-    dispatch({ type: "SET_TASKS", payload: state.tasks });
-  }, [state.tasks]);
-
   const filteredTasks = state.tasks
     .filter((task) =>
       state.statusFilter ? task.status === state.statusFilter : true,
